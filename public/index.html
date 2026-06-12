@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Purple Spark Admin</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <h1><span class="dot"></span> Purple Spark Admin</h1>
+      <span class="count-pill" id="countPill"></span>
+      <div class="spacer"></div>
+      <span class="muted" id="whoami"></span>
+      <button class="secondary" id="idsBtn" type="button">Org &amp; Team IDs</button>
+      <button class="secondary" id="logoutBtn" type="button">Log out</button>
+    </header>
+
+    <main>
+      <div class="msg" id="msg"></div>
+
+      <div class="toolbar">
+        <div class="field">
+          <label for="search">Search email</label>
+          <input id="search" type="text" placeholder="name@example.com" />
+        </div>
+        <div class="field">
+          <label for="orgFilter">Organization</label>
+          <select id="orgFilter">
+            <option value="">All organizations</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="roleFilter">Admin level</label>
+          <select id="roleFilter">
+            <option value="">All</option>
+            <option value="admin">admin</option>
+            <option value="leader">leader</option>
+            <option value="general">general</option>
+          </select>
+        </div>
+        <button id="refreshBtn" type="button">Apply</button>
+        <button class="secondary" id="clearBtn" type="button">Clear</button>
+        <div class="toolbar-spacer"></div>
+        <button id="saveAllBtn" type="button" disabled>Save all</button>
+      </div>
+
+      <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th class="sortable" data-sort="email">User <span class="sort-icon"></span></th>
+                <th class="sortable" data-sort="role">Admin level <span class="sort-icon"></span></th>
+                <th class="sortable" data-sort="organization_name">Organization <span class="sort-icon"></span></th>
+                <th class="sortable" data-sort="team_name">Team <span class="sort-icon"></span></th>
+                <th class="sortable" data-sort="org_membership_status">Status <span class="sort-icon"></span></th>
+                <th class="sortable" data-sort="completed">Completed sims <span class="sort-icon"></span></th>
+                <th></th>
+              </tr>
+            </thead>
+          <tbody id="usersBody">
+            <tr>
+              <td colspan="7" class="empty">Loading users...</td>
+            </tr>
+          </tbody>
+          </table>
+      </div>
+    </main>
+
+    <div class="modal-backdrop hidden" id="idsBackdrop"></div>
+    <div class="modal hidden" id="idsModal" role="dialog" aria-modal="true" aria-labelledby="idsTitle">
+      <div class="modal-header">
+        <h2 id="idsTitle">Organization &amp; Team IDs</h2>
+        <button class="secondary modal-close" id="idsClose" type="button" aria-label="Close">✕</button>
+      </div>
+      <div class="modal-toolbar">
+        <input id="idsSearch" type="text" placeholder="Filter by organization or team name" />
+        <button class="secondary" id="copyAllBtn" type="button">Copy all</button>
+      </div>
+      <div class="modal-body" id="idsBody"></div>
+    </div>
+
+    <script src="/app.js"></script>
+  </body>
+</html>
