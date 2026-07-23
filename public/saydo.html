@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Say–Do Gap · Purple Spark</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --ink:      #0B1622;
+      --panel:    #12212F;
+      --panel-2:  #17293A;
+      --line:     rgba(201,162,75,0.20);
+      --line-soft:rgba(234,241,246,0.08);
+      --haze:     #8AA0B4;
+      --fg:       #EAF1F6;
+      --say:      #38D6C4;  /* stated  — cool */
+      --say-fill: rgba(56,214,196,0.16);
+      --do:       #F0A63C;  /* revealed — warm */
+      --do-fill:  rgba(240,166,60,0.14);
+      --flare:    #E86A5C;  /* big divergence */
+      --brass:    #C9A24B;
+    }
+    * { box-sizing: border-box; }
+    /* The panels toggle via the `hidden` attribute; without this, the display:grid
+       rules below would override it and stale content would never clear. */
+    [hidden] { display: none !important; }
+    html, body { margin: 0; background: var(--ink); color: var(--fg); }
+    body {
+      font-family: Inter, system-ui, sans-serif;
+      background:
+        radial-gradient(1200px 600px at 78% -10%, rgba(56,214,196,0.06), transparent 60%),
+        radial-gradient(900px 500px at 12% 110%, rgba(240,166,60,0.05), transparent 55%),
+        var(--ink);
+      min-height: 100vh;
+    }
+    .eyebrow {
+      font: 500 11px/1 'Space Mono', monospace;
+      letter-spacing: 0.24em; text-transform: uppercase; color: var(--brass);
+    }
+
+    header.bar {
+      display: flex; align-items: center; gap: 24px;
+      padding: 20px 28px; border-bottom: 1px solid var(--line);
+      position: sticky; top: 0; z-index: 5;
+      background: rgba(11,22,34,0.86); backdrop-filter: blur(8px);
+    }
+    .brand { display: flex; flex-direction: column; gap: 4px; }
+    .brand h1 {
+      font: 700 20px/1 'Space Grotesk', sans-serif; margin: 0; letter-spacing: -0.01em;
+    }
+    .spacer { flex: 1; }
+    .picker { display: flex; align-items: center; gap: 10px; }
+    .picker label { font: 500 11px/1 'Space Mono', monospace; letter-spacing: 0.18em; text-transform: uppercase; color: var(--haze); }
+    select {
+      appearance: none; background: var(--panel-2); color: var(--fg);
+      border: 1px solid var(--line); border-radius: 8px; padding: 9px 34px 9px 12px;
+      font: 500 14px Inter, sans-serif; min-width: 260px; cursor: pointer;
+      background-image: linear-gradient(45deg, transparent 50%, var(--brass) 50%), linear-gradient(135deg, var(--brass) 50%, transparent 50%);
+      background-position: calc(100% - 18px) 18px, calc(100% - 13px) 18px; background-size: 5px 5px; background-repeat: no-repeat;
+    }
+    select:focus-visible { outline: 2px solid var(--say); outline-offset: 1px; }
+
+    main { max-width: 1240px; margin: 0 auto; padding: 26px 28px 60px; }
+
+    /* readout strip */
+    .readouts { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 22px; }
+    .readout {
+      background: var(--panel); border: 1px solid var(--line-soft); border-radius: 12px; padding: 16px 18px;
+    }
+    .readout .k { font: 700 11px/1 'Space Mono', monospace; letter-spacing: 0.16em; text-transform: uppercase; color: var(--haze); }
+    .readout .v { font: 700 30px/1.1 'Space Mono', monospace; margin-top: 10px; }
+    .readout .v small { font-size: 14px; color: var(--haze); font-weight: 400; }
+    .readout.flare .v { color: var(--flare); }
+
+    /* explainer strip */
+    .explainer { background: var(--panel); border: 1px solid var(--line-soft); border-radius: 12px; padding: 15px 20px; margin-bottom: 20px; }
+    .explainer p { margin: 0; font-size: 13px; line-height: 1.65; color: var(--haze); max-width: 900px; }
+    .explainer strong { color: var(--fg); font-weight: 700; }
+    .explainer .hl-say { color: var(--say); font-weight: 600; }
+    .explainer .hl-do { color: var(--do); font-weight: 600; }
+    .explainer .term { color: var(--fg); font-style: normal; border-bottom: 1px dashed var(--brass); }
+
+    .grid { display: grid; grid-template-columns: 1fr 1.05fr; gap: 22px; }
+    @media (max-width: 980px) { .grid { grid-template-columns: 1fr; } .readouts { grid-template-columns: repeat(2,1fr);} }
+
+    .card {
+      background: var(--panel); border: 1px solid var(--line-soft); border-radius: 14px;
+      padding: 20px; min-height: 120px;
+    }
+    .card h2 {
+      font: 700 14px/1 'Space Grotesk', sans-serif; letter-spacing: 0.02em; margin: 0 0 4px;
+    }
+    .card .sub { font-size: 12.5px; color: var(--haze); margin: 0 0 16px; }
+
+    .legend { display: flex; gap: 18px; margin: 4px 0 8px; }
+    .legend span { display: inline-flex; align-items: center; gap: 7px; font: 500 12px 'Space Mono', monospace; letter-spacing: 0.04em; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+    .dot.say { background: var(--say); }
+    .dot.do  { background: var(--do); }
+
+    /* say-vs-do bar chart (self-contained, no external library) */
+    .barchart { display: flex; flex-direction: column; gap: 16px; padding-top: 4px; }
+    .bar-row { display: flex; flex-direction: column; gap: 6px; }
+    .bar-head { display: flex; align-items: baseline; gap: 8px; }
+    .bar-name { font: 600 14px Inter, sans-serif; color: var(--fg); letter-spacing: -0.01em; }
+    .bar-qual { font: 500 11.5px Inter, sans-serif; color: var(--haze); margin-left: 7px; }
+    .bar-delta { margin-left: auto; font: 600 12px Inter, sans-serif; color: var(--haze); white-space: nowrap; }
+    .bar-delta b { font-weight: 700; color: var(--fg); }
+    .bar-delta.big b { color: var(--flare); }
+    .bar { position: relative; height: 20px; border-radius: 6px; background: var(--panel-2); overflow: hidden; }
+    .bar-fill { position: absolute; left: 0; top: 0; height: 100%; border-radius: 6px; transition: width 0.55s cubic-bezier(0.22,1,0.36,1); }
+    .bar.say .bar-fill { background: linear-gradient(90deg, rgba(56,214,196,0.75), var(--say)); }
+    .bar.do  .bar-fill { background: linear-gradient(90deg, rgba(240,166,60,0.75), var(--do)); }
+    .bar-tag { position: absolute; left: 9px; top: 50%; transform: translateY(-50%); font: 600 11px Inter, sans-serif; letter-spacing: 0.01em; color: var(--fg); text-shadow: 0 1px 2px rgba(0,0,0,0.7); }
+    .bar-tag b { font: 700 11px 'Space Mono', monospace; margin-left: 4px; }
+    .bar-scale { display: flex; justify-content: space-between; font: 400 10px 'Space Mono', monospace; color: var(--haze); margin-top: 4px; opacity: 0.7; }
+    @media (prefers-reduced-motion: reduce) { .bar-fill { transition: none; } }
+
+    /* divergence leaderboard */
+    .lead { display: flex; flex-direction: column; gap: 2px; }
+    .row { padding: 11px 4px; border-bottom: 1px solid var(--line-soft); }
+    .row:last-child { border-bottom: 0; }
+    .row .top { display: flex; align-items: baseline; gap: 8px; margin-bottom: 9px; }
+    .row .name { font: 600 14px Inter, sans-serif; letter-spacing: -0.01em; }
+    .qual { font: 500 11px Inter, sans-serif; color: var(--haze); background: rgba(234,241,246,0.04); border: 1px solid var(--line-soft); padding: 2px 8px; border-radius: 6px; }
+    .row .gapval { margin-left: auto; font: 600 13px Inter, sans-serif; color: var(--haze); white-space: nowrap; }
+    .row .gapval b { font-weight: 700; font-size: 15px; }
+    .track { position: relative; height: 8px; border-radius: 999px; background: var(--panel-2); }
+    .track .span { position: absolute; height: 100%; border-radius: 999px; opacity: 0.45; }
+    .track .mk { position: absolute; top: 50%; width: 12px; height: 12px; border-radius: 50%; transform: translate(-50%,-50%); border: 2px solid var(--panel); }
+    .track .mk.say { background: var(--say); }
+    .track .mk.do  { background: var(--do); }
+    .scaleline { display: flex; justify-content: space-between; font: 400 9.5px 'Space Mono', monospace; color: var(--haze); margin-top: 5px; }
+
+    /* transcript */
+    .transcript { display: flex; flex-direction: column; gap: 12px; max-height: 560px; overflow: auto; padding-right: 4px; }
+    .msg { max-width: 82%; padding: 11px 14px; border-radius: 12px; font-size: 13.5px; line-height: 1.5; position: relative; }
+    .msg .who { font: 700 9.5px 'Space Mono', monospace; letter-spacing: 0.14em; text-transform: uppercase; opacity: 0.7; margin-bottom: 5px; }
+    .msg.user { align-self: flex-end; background: var(--panel-2); border: 1px solid var(--line-soft); }
+    .msg.assistant { align-self: flex-start; background: rgba(56,214,196,0.06); border: 1px solid rgba(56,214,196,0.18); }
+    .score-btn {
+      margin-top: 9px; font: 700 10px 'Space Mono', monospace; letter-spacing: 0.08em;
+      background: transparent; color: var(--brass); border: 1px solid var(--line); border-radius: 6px;
+      padding: 5px 9px; cursor: pointer;
+    }
+    .score-btn:hover { background: rgba(201,162,75,0.12); }
+    .score-btn[disabled] { opacity: 0.35; cursor: default; }
+    .impacts { margin-top: 10px; display: none; flex-direction: column; gap: 6px; }
+    .impacts.show { display: flex; }
+    .impact { font: 400 12px Inter, sans-serif; display: flex; gap: 8px; align-items: baseline; opacity: 0; transform: translateY(4px); transition: all 0.35s ease; }
+    .impact.in { opacity: 1; transform: none; }
+    .impact .imp-v { font: 700 12px 'Space Mono', monospace; min-width: 46px; }
+    .impact .pos { color: var(--say); }
+    .impact .neg { color: var(--flare); }
+    .impact .rat { color: var(--haze); font-style: italic; }
+
+    .state { text-align: center; color: var(--haze); padding: 60px 20px; font-size: 14px; }
+    .state.err { color: var(--flare); }
+
+    ::-webkit-scrollbar { width: 8px; } ::-webkit-scrollbar-thumb { background: var(--line); border-radius: 8px; }
+    @media (prefers-reduced-motion: reduce) { .impact { transition: none; } }
+  </style>
+</head>
+<body>
+  <header class="bar">
+    <div class="brand">
+      <span class="eyebrow">Purple Spark · Leadership Signal</span>
+      <h1>The Say–Do Gap</h1>
+    </div>
+    <div class="spacer"></div>
+    <div class="picker">
+      <label for="user">Leader</label>
+      <select id="user"><option value="">Loading…</option></select>
+    </div>
+  </header>
+
+  <main>
+    <section class="explainer">
+      <p><strong>What you're looking at.</strong> Every leader is measured on the same set of leadership
+      traits, two ways: what they <span class="hl-say">say</span> they value — drawn from their own written
+      reflections — and what they <span class="hl-do">do</span> when they make decisions under pressure in
+      timed simulations. Both are scored on the same 0–10 scale. Where the two pull apart is the leader's
+      <span class="term">say–do gap</span>: the traits they talk about but don't act on, or act on without
+      naming. Pick a leader to see their gap trait by trait.</p>
+    </section>
+
+    <div id="readouts" class="readouts" hidden>
+      <div class="readout" title="Traits with a stated (Say) score, from the leader's reflections"><div class="k">Traits they name</div><div class="v" id="r-say">–</div></div>
+      <div class="readout" title="Traits with a revealed (Do) score, from their decisions under pressure"><div class="k">Traits they show</div><div class="v" id="r-do">–</div></div>
+      <div class="readout" title="Traits measured on both sides — the ones with a real, comparable gap"><div class="k">Measured on both</div><div class="v" id="r-both">–</div></div>
+      <div class="readout flare" title="Average gap across comparable traits, on the 0–10 scale"><div class="k">Average gap</div><div class="v" id="r-gap">–<small>/10</small></div></div>
+    </div>
+
+    <div id="state" class="state">Choose a leader above to see how their stated values line up with their decisions under pressure.</div>
+
+    <div id="content" class="grid" hidden>
+      <section class="card">
+        <h2>Say vs Do · by trait</h2>
+        <p class="sub">Two bars per trait — teal is what they <strong>say</strong> they value, amber is what they <strong>do</strong> under pressure. The bigger the difference between the two bars, the bigger the gap. Top traits by divergence.</p>
+        <div class="legend">
+          <span><i class="dot say"></i> Say — what they state</span>
+          <span><i class="dot do"></i> Do — what they did</span>
+        </div>
+        <div id="chart" class="barchart"></div>
+      </section>
+
+      <section class="card">
+        <h2>Divergence leaderboard</h2>
+        <p class="sub">Per trait: teal marks the stated score, amber marks the revealed score, the shaded span is the gap.</p>
+        <div id="lead" class="lead"></div>
+      </section>
+
+      <section class="card" style="grid-column: 1 / -1;">
+        <h2>Navigator conversation</h2>
+        <p class="sub" id="tsub">The leader's own written reflection. Their stated values are drawn from the turns they wrote.</p>
+        <div id="transcript" class="transcript"></div>
+      </section>
+    </div>
+  </main>
+
+  <script src="/saydo.js"></script>
+</body>
+</html>

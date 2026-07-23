@@ -7,6 +7,7 @@ const session = require('express-session');
 const { router: authRouter, requireAuth } = require('./src/auth');
 const usersRouter = require('./src/routes/users');
 const lookupsRouter = require('./src/routes/lookups');
+const saydoRouter = require('./src/routes/saydo');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -43,6 +44,8 @@ app.use('/api', authRouter);
 // Protected API.
 app.use('/api/users', requireAuth, usersRouter);
 app.use('/api', requireAuth, lookupsRouter);
+// saydo router applies requireAuth itself, so /api/saydo/* is protected like the rest.
+app.use('/api/saydo', saydoRouter);
 
 // Gate the dashboard: redirect to login if not authenticated.
 function gateDashboard(req, res, next) {

@@ -553,6 +553,9 @@ document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape' && !idsModal.classList.contains('hidden')) closeIdsModal();
 });
 
+document.getElementById('saydoBtn').addEventListener('click', () => {
+  window.location.href = '/saydo.html';
+});
 document.getElementById('refreshBtn').addEventListener('click', loadUsers);
 document.getElementById('clearBtn').addEventListener('click', () => {
   searchInput.value = '';
