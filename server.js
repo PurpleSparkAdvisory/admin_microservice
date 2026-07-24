@@ -62,6 +62,7 @@ app.get(['/', '/index.html'], gateDashboard, (req, res) => {
 // Static assets (login page, css, js). index:false so '/' uses the gated route above.
 app.use(express.static(PUBLIC_DIR, { index: false }));
 
+
 app.listen(PORT, () => {
   console.log(`Admin microservice listening on port ${PORT}`);
 });

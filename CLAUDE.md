@@ -4,9 +4,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-A lightweight internal admin tool for Purple Spark to manage users in the **main application's** Supabase database during the beta test. It is a standalone Node.js + Express service — no build step, no framework, no tests. The UI is a single static page served from `public/`.
+A lightweight internal admin tool for Purple Spark to manage users in the **main application's** Supabase database during the beta test. It is a standalone Node.js + Express service — no build step, no framework, no tests. The UI is served from `public/` as a set of static pages (dashboard + a Say–Do Gap visualizer).
 
-This microservice is a *satellite* of a larger Next.js application (the "main app"). It shares that app's Supabase project but has its own repo and deploy. `SAY_DO_GAP.md` documents a feature that lives in the **main app**, not here — its tables/files (`lib/...`, `services/...`, `scripts/...`) are not part of this repo.
+This microservice is a *satellite* of a larger Next.js application (the "main app"). It shares that app's Supabase project but has its own repo and deploy. `SAY_DO_GAP.md` and `SAYDO_VIZ_SPEC.md` describe the **main app's** Say–Do Gap feature (its `lib/...`, `services/...`, production tables) — that source is not in this repo. What *is* here is a read-only visualizer of that data (see `src/routes/saydo.js` and `public/saydo.html`), which re-implements the gap math in plain JS against the shared Supabase.
 
 ## Commands
 
@@ -15,7 +15,17 @@ npm install     # install deps (Node 22.x)
 npm start       # run the server (alias: npm run dev — same thing, no watch/reload)
 ```
 
-There is **no build, lint, or test tooling**. `npm start` and `npm run dev` both just run `node server.js`. Requires a populated `.env` (copy from `.env.example`) or the server throws on boot. Then open `http://localhost:3000`.
+There is **no build, lint, or test tooling**. `npm start` and `npm run dev` both just run `node server.js`. Requires a populated `.env` (see the vars listed under Deploy) or the server throws on boot. Then open `http://localhost:3000`.
+
+Two standalone maintenance scripts (run directly with `node`, not via npm; both load `.env` and use the service-role client):
+
+```bash
+node scripts/inspect-schema.js            # READ-ONLY: enumerate/fingerprint Supabase tables via PostgREST OpenAPI
+node scripts/seed-saydo-demo.js           # seed Say-layer demo scores for one hard-coded user
+node scripts/seed-saydo-demo.js --remove  # tear that seed back down (idempotent)
+```
+
+`seed-saydo-demo.js` is the **only write path in this repo other than the users PATCH** — it upserts into `user_say_component_scores` for a single hard-coded `USER_ID`, and nothing else.
 
 ## Architecture
 
@@ -26,7 +36,8 @@ Request flow: `server.js` (app setup, session, static serving) → route modules
 - **`src/supabase.js`** — single Supabase client created with the **service role key**, which bypasses RLS. This is server-side only and must never reach the browser. `SUPABASE_URL` falls back to `NEXT_PUBLIC_SUPABASE_URL` (a convenience for sharing env with the main app).
 - **`src/routes/users.js`** — the core: list users (with org/team names resolved via Supabase nested selects, plus a per-user Helmsman simulation summary), PATCH a user, and read simulation history.
 - **`src/routes/lookups.js`** — read-only `organizations` and `teams` lists for the dropdowns.
-- **`public/`** — `index.html` (dashboard), `login.html`, `app.js` (all client logic, vanilla JS, no framework), `styles.css`.
+- **`src/routes/saydo.js`** — mounted at `/api/saydo`; unlike the others it applies `requireAuth` inside the router itself (server.js mounts it without wrapping). Read-only endpoints: `GET /users` (users with Say and/or Do data), `GET /:email` (per-trait gap payload + transcript). Plus an **optional, display-only** `POST /:email/score-turn` that calls Gemini to score one conversation turn live and **writes nothing** — it returns `503` unless a Gemini key is set, so it can never fail-hard in a demo. The gap math mirrors the main app: `gap = |do − say|`, with an unscored side neutral-filled to `5.0`.
+- **`public/`** — `index.html` (dashboard) + `app.js`; `saydo.html` (Say–Do Gap visualizer) + `saydo.js`; `login.html`; `styles.css`. All client logic is vanilla JS, no framework. The dashboard links to the visualizer via the "Say–Do Gap" button.
 
 ## Data model (in the main app's Supabase)
 
@@ -38,6 +49,12 @@ Email is the user primary key and is referenced across tables, so **this tool ne
 | Organizations | `organizations` | `id`, `name` |
 | Teams | `teams` | `id`, `name`, `organization_id` |
 | Simulations | `helmsman_sessions` | `user_id` (→ `users.email`), `scenario_id`, `status`, `started_at`, `completed_at`, `difficulty`, `attempt_number` |
+| Trait catalogue | `trait_components` | `id` (UUID), `component_id` (human code, e.g. `C001`), `name`, `tier`, `what_it_is`, `is_active` |
+| **Do** scores (revealed behavior) | `user_component_scores` | `user_id` (→ `users.email`), `component_id` (→ `trait_components.id`), `score` |
+| **Say** scores (stated) | `user_say_component_scores` | `user_id`, `component_id`, `score`, `evidence_count`, `last_message_id`, `updated_at` |
+| Conversation transcript | `navigator_messages` | `user_id` (→ `users.email`); role/content/timestamp column names vary, so `saydo.js` selects `*` and normalizes |
+
+The Say/Do tables join on `trait_components.id` (a UUID) — note that `user_*_component_scores.component_id` holds that UUID, while `trait_components.component_id` is the human-readable code shown in the UI.
 
 ## Conventions and constraints
 
@@ -50,4 +67,4 @@ Email is the user primary key and is referenced across tables, so **this tool ne
 
 ## Deploy
 
-Deployed on **Railway** from GitHub. Railway auto-detects Node, runs `npm install` then `npm start`, injects `PORT` (do not set it), and sets `NODE_ENV=production` (enables secure cookies). Set `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `ADMIN_USERNAME`, `ADMIN_PASSWORD`, `SESSION_SECRET` in the service Variables. `.env` is gitignored and must never be committed; rotate the service role key in Supabase if it is ever exposed.
+Deployed on **Railway** from GitHub. Railway auto-detects Node, runs `npm install` then `npm start`, injects `PORT` (do not set it), and sets `NODE_ENV=production` (enables secure cookies). Set `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `ADMIN_USERNAME`, `ADMIN_PASSWORD`, `SESSION_SECRET` in the service Variables. Optionally set `GEMINI_API_KEY` (or `GOOGLE_API_KEY` / `VERTEX_API_KEY`, and `VERTEX_GEMINI_MODEL` to override the default `gemini-1.5-flash`) to enable the display-only live-scoring endpoint; leave it unset and that endpoint stays disabled. `.env` is gitignored and must never be committed; rotate the service role key in Supabase if it is ever exposed.

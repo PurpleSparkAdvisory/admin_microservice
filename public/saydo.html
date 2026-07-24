@@ -3,217 +3,313 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Say–Do Gap · Purple Spark</title>
+  <title>Say&#8211;Do Gap | Purple Spark</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet" />
   <style>
     :root {
-      --ink:      #0B1622;
-      --panel:    #12212F;
-      --panel-2:  #17293A;
-      --line:     rgba(201,162,75,0.20);
-      --line-soft:rgba(234,241,246,0.08);
-      --haze:     #8AA0B4;
-      --fg:       #EAF1F6;
-      --say:      #38D6C4;  /* stated  — cool */
-      --say-fill: rgba(56,214,196,0.16);
-      --do:       #F0A63C;  /* revealed — warm */
-      --do-fill:  rgba(240,166,60,0.14);
-      --flare:    #E86A5C;  /* big divergence */
-      --brass:    #C9A24B;
+      --bg:        #160F1E;   /* deep aubergine */
+      --bg-2:      #241528;
+      --panel:     rgba(36,24,52,0.55);   /* frosted glass */
+      --fill-track:rgba(255,255,255,0.05);
+      --line:      rgba(167,139,250,0.20);
+      --line-soft: rgba(244,239,250,0.08);
+      --muted:     #B3A6C7;
+      --fg:        #F4EFFA;
+      --say:       #A78BFA;   /* stated  — violet  */
+      --say-fill:  rgba(167,139,250,0.16);
+      --do:        #FF7A59;   /* revealed — coral */
+      --do-fill:   rgba(255,122,89,0.14);
+      --flare:     #FF4D6D;   /* big divergence */
+      --accent:    #8B5CF6;
+      --accent-2:  #C084FC;
+      --display:   'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
+      --body:      'Inter', system-ui, sans-serif;
     }
     * { box-sizing: border-box; }
     /* The panels toggle via the `hidden` attribute; without this, the display:grid
        rules below would override it and stale content would never clear. */
     [hidden] { display: none !important; }
-    html, body { margin: 0; background: var(--ink); color: var(--fg); }
-    body {
-      font-family: Inter, system-ui, sans-serif;
+    html, body { margin: 0; background: var(--bg); color: var(--fg); }
+    body { font-family: var(--body); min-height: 100vh; -webkit-font-smoothing: antialiased; }
+
+    /* ---- animated aurora backdrop -------------------------------------- */
+    .aurora {
+      position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none;
       background:
-        radial-gradient(1200px 600px at 78% -10%, rgba(56,214,196,0.06), transparent 60%),
-        radial-gradient(900px 500px at 12% 110%, rgba(240,166,60,0.05), transparent 55%),
-        var(--ink);
-      min-height: 100vh;
+        radial-gradient(1100px 620px at 50% -12%, rgba(139,92,246,0.12), transparent 60%),
+        linear-gradient(180deg, var(--bg) 0%, var(--bg-2) 55%, var(--bg) 100%);
     }
+    .aurora::before, .aurora::after, .aurora span {
+      content: ''; position: absolute; border-radius: 50%; filter: blur(90px); will-change: transform;
+    }
+    .aurora::before { /* violet */
+      width: 60vw; height: 60vw; top: -18%; left: -10%; opacity: 0.55;
+      background: radial-gradient(circle, rgba(139,92,246,0.60), transparent 66%);
+      animation: drift1 32s ease-in-out infinite alternate;
+    }
+    .aurora::after {  /* coral */
+      width: 55vw; height: 55vw; bottom: -22%; right: -12%; opacity: 0.45;
+      background: radial-gradient(circle, rgba(255,122,89,0.50), transparent 66%);
+      animation: drift2 38s ease-in-out infinite alternate;
+    }
+    .aurora span.b1 { /* magenta */
+      width: 44vw; height: 44vw; top: 18%; right: 6%; opacity: 0.34;
+      background: radial-gradient(circle, rgba(217,70,166,0.45), transparent 66%);
+      animation: drift3 44s ease-in-out infinite alternate;
+    }
+    .aurora span.b2 { /* amber */
+      width: 40vw; height: 40vw; bottom: 4%; left: 10%; opacity: 0.28;
+      background: radial-gradient(circle, rgba(245,158,11,0.42), transparent 66%);
+      animation: drift1 50s ease-in-out infinite alternate-reverse;
+    }
+    @keyframes drift1 { from { transform: translate3d(0,0,0) scale(1); } to { transform: translate3d(6%,4%,0) scale(1.14); } }
+    @keyframes drift2 { from { transform: translate3d(0,0,0) scale(1.05); } to { transform: translate3d(-7%,-5%,0) scale(0.92); } }
+    @keyframes drift3 { from { transform: translate3d(0,0,0) scale(0.95); } to { transform: translate3d(-5%,7%,0) scale(1.1); } }
+
+    @keyframes riseIn { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+    @keyframes grow   { from { width: 0; } }
+    .reveal { animation: riseIn 0.6s cubic-bezier(0.22,1,0.36,1) both; }
+    /* cascade the readouts and the content cards in one after another */
+    .readouts .readout:nth-child(2) { animation-delay: 0.06s; }
+    .readouts .readout:nth-child(3) { animation-delay: 0.12s; }
+    .readouts .readout:nth-child(4) { animation-delay: 0.18s; }
+    #content .card:nth-child(2) { animation-delay: 0.09s; }
+    #content .card:nth-child(3) { animation-delay: 0.18s; }
+
     .eyebrow {
-      font: 500 11px/1 'Space Mono', monospace;
-      letter-spacing: 0.24em; text-transform: uppercase; color: var(--brass);
+      width: fit-content;
+      font: 700 10.5px/1.4 var(--body); letter-spacing: 0.16em; text-transform: uppercase; color: var(--accent-2);
+      background: rgba(139,92,246,0.14); border: 1px solid var(--line);
+      padding: 4px 10px; border-radius: 999px;
     }
 
     header.bar {
-      display: flex; align-items: center; gap: 24px;
-      padding: 20px 28px; border-bottom: 1px solid var(--line);
+      display: flex; align-items: center; gap: 20px; min-height: 74px;
+      padding: 14px 30px; border-bottom: 1px solid var(--line);
       position: sticky; top: 0; z-index: 5;
-      background: rgba(11,22,34,0.86); backdrop-filter: blur(8px);
+      background: rgba(22,15,30,0.72); backdrop-filter: blur(14px) saturate(1.2); -webkit-backdrop-filter: blur(14px) saturate(1.2);
     }
-    .brand { display: flex; flex-direction: column; gap: 4px; }
-    .brand h1 {
-      font: 700 20px/1 'Space Grotesk', sans-serif; margin: 0; letter-spacing: -0.01em;
+    .backlink {
+      display: inline-flex; align-items: center; gap: 8px;
+      font: 600 13px var(--body); color: var(--muted); text-decoration: none;
+      background: rgba(255,255,255,0.04); border: 1px solid var(--line);
+      border-radius: 999px; padding: 8px 15px 8px 12px; white-space: nowrap;
+      transition: color 0.18s ease, border-color 0.18s ease, background 0.18s ease, transform 0.18s ease;
     }
+    .backlink:hover { color: var(--fg); border-color: var(--accent); background: rgba(139,92,246,0.16); transform: translateX(-1px); }
+    .backlink:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .backlink svg { width: 15px; height: 15px; flex: none; }
+    .header-divider { width: 1px; height: 34px; background: var(--line); }
+    .brand { display: flex; flex-direction: column; gap: 7px; }
+    .brand h1 { font: 800 22px/1 var(--display); margin: 0; letter-spacing: -0.02em; }
     .spacer { flex: 1; }
     .picker { display: flex; align-items: center; gap: 10px; }
-    .picker label { font: 500 11px/1 'Space Mono', monospace; letter-spacing: 0.18em; text-transform: uppercase; color: var(--haze); }
+    .picker label { font: 600 11px var(--body); letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
     select {
-      appearance: none; background: var(--panel-2); color: var(--fg);
-      border: 1px solid var(--line); border-radius: 8px; padding: 9px 34px 9px 12px;
-      font: 500 14px Inter, sans-serif; min-width: 260px; cursor: pointer;
-      background-image: linear-gradient(45deg, transparent 50%, var(--brass) 50%), linear-gradient(135deg, var(--brass) 50%, transparent 50%);
-      background-position: calc(100% - 18px) 18px, calc(100% - 13px) 18px; background-size: 5px 5px; background-repeat: no-repeat;
+      appearance: none; background: rgba(255,255,255,0.05); color: var(--fg);
+      border: 1px solid var(--line); border-radius: 10px; padding: 10px 36px 10px 14px;
+      font: 500 14px var(--body); min-width: 270px; cursor: pointer;
+      background-image: linear-gradient(45deg, transparent 50%, var(--accent-2) 50%), linear-gradient(135deg, var(--accent-2) 50%, transparent 50%);
+      background-position: calc(100% - 19px) 19px, calc(100% - 14px) 19px; background-size: 5px 5px; background-repeat: no-repeat;
+      transition: border-color 0.18s ease, box-shadow 0.18s ease;
     }
-    select:focus-visible { outline: 2px solid var(--say); outline-offset: 1px; }
+    select:hover { border-color: var(--accent); }
+    select:focus-visible { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(139,92,246,0.28); }
+    /* The open dropdown list is OS-rendered on a light background, so force dark,
+       readable option text (the closed select keeps the light-on-dark theme). */
+    select option { color: #1A1225; background: #FFFFFF; }
 
-    main { max-width: 1240px; margin: 0 auto; padding: 26px 28px 60px; }
+    main { max-width: 1240px; margin: 0 auto; padding: 30px 30px 72px; }
+
+    /* glass surface shared by cards, readouts, explainer */
+    .glass {
+      background: var(--panel); backdrop-filter: blur(20px) saturate(1.3); -webkit-backdrop-filter: blur(20px) saturate(1.3);
+      border: 1px solid var(--line); border-radius: 18px;
+      box-shadow: 0 1px 0 rgba(255,255,255,0.06) inset, 0 24px 60px rgba(8,3,16,0.45);
+    }
 
     /* readout strip */
-    .readouts { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 22px; }
-    .readout {
-      background: var(--panel); border: 1px solid var(--line-soft); border-radius: 12px; padding: 16px 18px;
+    .readouts { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+    .readout { padding: 18px 20px; transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease; }
+    .readout:hover { transform: translateY(-2px); border-color: var(--accent); box-shadow: 0 1px 0 rgba(255,255,255,0.08) inset, 0 26px 60px rgba(8,3,16,0.5); }
+    .readout .k { font: 700 11px var(--body); letter-spacing: 0.13em; text-transform: uppercase; color: var(--muted); }
+    .readout .v { font: 800 36px/1 var(--display); margin-top: 12px; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+    .readout .v small { font-size: 15px; color: var(--muted); font-weight: 500; margin-left: 1px; }
+    .readout.flare .v {
+      background: linear-gradient(90deg, var(--say), var(--do));
+      -webkit-background-clip: text; background-clip: text; color: transparent;
     }
-    .readout .k { font: 700 11px/1 'Space Mono', monospace; letter-spacing: 0.16em; text-transform: uppercase; color: var(--haze); }
-    .readout .v { font: 700 30px/1.1 'Space Mono', monospace; margin-top: 10px; }
-    .readout .v small { font-size: 14px; color: var(--haze); font-weight: 400; }
-    .readout.flare .v { color: var(--flare); }
 
     /* explainer strip */
-    .explainer { background: var(--panel); border: 1px solid var(--line-soft); border-radius: 12px; padding: 15px 20px; margin-bottom: 20px; }
-    .explainer p { margin: 0; font-size: 13px; line-height: 1.65; color: var(--haze); max-width: 900px; }
+    .explainer { padding: 18px 22px; margin-bottom: 22px; }
+    .explainer p { margin: 0; font-size: 13.5px; line-height: 1.7; color: var(--muted); max-width: 940px; }
     .explainer strong { color: var(--fg); font-weight: 700; }
-    .explainer .hl-say { color: var(--say); font-weight: 600; }
-    .explainer .hl-do { color: var(--do); font-weight: 600; }
-    .explainer .term { color: var(--fg); font-style: normal; border-bottom: 1px dashed var(--brass); }
+    .explainer .hl-say { color: var(--say); font-weight: 600; white-space: nowrap; }
+    .explainer .hl-do { color: var(--do); font-weight: 600; white-space: nowrap; }
+    .explainer .hl-say .ic, .explainer .hl-do .ic { width: 14px; height: 14px; margin-right: 1px; }
+    .explainer .term { color: var(--fg); font-style: normal; border-bottom: 1px dashed var(--accent-2); }
 
-    .grid { display: grid; grid-template-columns: 1fr 1.05fr; gap: 22px; }
+    .grid { display: grid; grid-template-columns: 1fr 1.05fr; gap: 24px; }
     @media (max-width: 980px) { .grid { grid-template-columns: 1fr; } .readouts { grid-template-columns: repeat(2,1fr);} }
-
-    .card {
-      background: var(--panel); border: 1px solid var(--line-soft); border-radius: 14px;
-      padding: 20px; min-height: 120px;
+    @media (max-width: 720px) {
+      header.bar { flex-wrap: wrap; gap: 12px 16px; padding: 14px 18px; }
+      .header-divider { display: none; }
+      .picker { width: 100%; }
+      .picker select { flex: 1; min-width: 0; }
+      main { padding: 22px 18px 52px; }
+      .brand h1 { font-size: 20px; }
     }
-    .card h2 {
-      font: 700 14px/1 'Space Grotesk', sans-serif; letter-spacing: 0.02em; margin: 0 0 4px;
-    }
-    .card .sub { font-size: 12.5px; color: var(--haze); margin: 0 0 16px; }
 
-    .legend { display: flex; gap: 18px; margin: 4px 0 8px; }
-    .legend span { display: inline-flex; align-items: center; gap: 7px; font: 500 12px 'Space Mono', monospace; letter-spacing: 0.04em; }
-    .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
-    .dot.say { background: var(--say); }
-    .dot.do  { background: var(--do); }
+    .card { padding: 24px; min-height: 120px; transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease; }
+    .card:hover { transform: translateY(-2px); border-color: var(--accent); box-shadow: 0 1px 0 rgba(255,255,255,0.08) inset, 0 30px 70px rgba(8,3,16,0.55); }
+    .card h2 { font: 700 16px/1.15 var(--display); letter-spacing: -0.01em; margin: 0 0 5px; }
+    .card .sub { font-size: 12.5px; line-height: 1.55; color: var(--muted); margin: 0 0 18px; }
+
+    /* Say/Do icons: a speech bubble and a lightning bolt that replace the words.
+       They inherit colour from .ic-say / .ic-do so the same markup tints violet/coral. */
+    .ic { display: inline-block; vertical-align: middle; fill: currentColor; }
+    .ic-say { color: var(--say); }
+    .ic-do  { color: var(--do); }
+
+    .legend { display: flex; flex-wrap: wrap; gap: 22px; margin: 2px 0 12px; }
+    .legend span { display: inline-flex; align-items: center; gap: 8px; font: 500 12px var(--body); color: var(--muted); }
+    .legend .ic { width: 17px; height: 17px; filter: drop-shadow(0 0 6px currentColor); }
+    .legend b { color: var(--fg); font-weight: 600; }
 
     /* say-vs-do bar chart (self-contained, no external library) */
-    .barchart { display: flex; flex-direction: column; gap: 16px; padding-top: 4px; }
-    .bar-row { display: flex; flex-direction: column; gap: 6px; }
+    .barchart { display: flex; flex-direction: column; gap: 18px; padding-top: 4px; }
+    .bar-row { display: flex; flex-direction: column; gap: 7px; }
     .bar-head { display: flex; align-items: baseline; gap: 8px; }
-    .bar-name { font: 600 14px Inter, sans-serif; color: var(--fg); letter-spacing: -0.01em; }
-    .bar-qual { font: 500 11.5px Inter, sans-serif; color: var(--haze); margin-left: 7px; }
-    .bar-delta { margin-left: auto; font: 600 12px Inter, sans-serif; color: var(--haze); white-space: nowrap; }
+    .bar-name { font: 600 14px var(--body); color: var(--fg); letter-spacing: -0.01em; }
+    .bar-qual { font: 500 11.5px var(--body); color: var(--muted); margin-left: 7px; }
+    .bar-delta { margin-left: auto; font: 600 12px var(--body); color: var(--muted); white-space: nowrap; }
     .bar-delta b { font-weight: 700; color: var(--fg); }
     .bar-delta.big b { color: var(--flare); }
-    .bar { position: relative; height: 20px; border-radius: 6px; background: var(--panel-2); overflow: hidden; }
-    .bar-fill { position: absolute; left: 0; top: 0; height: 100%; border-radius: 6px; transition: width 0.55s cubic-bezier(0.22,1,0.36,1); }
-    .bar.say .bar-fill { background: linear-gradient(90deg, rgba(56,214,196,0.75), var(--say)); }
-    .bar.do  .bar-fill { background: linear-gradient(90deg, rgba(240,166,60,0.75), var(--do)); }
-    .bar-tag { position: absolute; left: 9px; top: 50%; transform: translateY(-50%); font: 600 11px Inter, sans-serif; letter-spacing: 0.01em; color: var(--fg); text-shadow: 0 1px 2px rgba(0,0,0,0.7); }
-    .bar-tag b { font: 700 11px 'Space Mono', monospace; margin-left: 4px; }
-    .bar-scale { display: flex; justify-content: space-between; font: 400 10px 'Space Mono', monospace; color: var(--haze); margin-top: 4px; opacity: 0.7; }
-    @media (prefers-reduced-motion: reduce) { .bar-fill { transition: none; } }
+    .bar { position: relative; height: 24px; border-radius: 9px; background: var(--fill-track); box-shadow: inset 0 0 0 1px var(--line-soft); overflow: hidden; }
+    .bar-fill {
+      position: absolute; left: 0; top: 0; height: 100%; border-radius: 9px;
+      animation: grow 0.9s cubic-bezier(0.22,1,0.36,1) both; animation-delay: var(--d, 0ms);
+    }
+    .bar.say .bar-fill { background: linear-gradient(90deg, #7C5CFF, var(--say)); box-shadow: 0 0 18px -3px rgba(167,139,250,0.8); }
+    .bar.do  .bar-fill { background: linear-gradient(90deg, #FF5470, var(--do)); box-shadow: 0 0 18px -3px rgba(255,122,89,0.8); }
+    .bar-tag { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); display: inline-flex; align-items: center; gap: 6px; color: var(--fg); }
+    .bar-tag .ic { width: 14px; height: 14px; color: #fff; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.85)); }
+    .bar-tag b { font: 700 11.5px var(--body); font-variant-numeric: tabular-nums; text-shadow: 0 1px 3px rgba(0,0,0,0.85); }
+    .bar-scale { display: flex; justify-content: space-between; font: 500 10px var(--body); color: var(--muted); margin-top: 4px; opacity: 0.65; }
 
     /* divergence leaderboard */
-    .lead { display: flex; flex-direction: column; gap: 2px; }
-    .row { padding: 11px 4px; border-bottom: 1px solid var(--line-soft); }
+    .lead { display: flex; flex-direction: column; }
+    .row { padding: 13px 6px; border-bottom: 1px solid var(--line-soft); animation: riseIn 0.5s cubic-bezier(0.22,1,0.36,1) both; animation-delay: var(--d, 0ms); }
     .row:last-child { border-bottom: 0; }
-    .row .top { display: flex; align-items: baseline; gap: 8px; margin-bottom: 9px; }
-    .row .name { font: 600 14px Inter, sans-serif; letter-spacing: -0.01em; }
-    .qual { font: 500 11px Inter, sans-serif; color: var(--haze); background: rgba(234,241,246,0.04); border: 1px solid var(--line-soft); padding: 2px 8px; border-radius: 6px; }
-    .row .gapval { margin-left: auto; font: 600 13px Inter, sans-serif; color: var(--haze); white-space: nowrap; }
-    .row .gapval b { font-weight: 700; font-size: 15px; }
-    .track { position: relative; height: 8px; border-radius: 999px; background: var(--panel-2); }
-    .track .span { position: absolute; height: 100%; border-radius: 999px; opacity: 0.45; }
-    .track .mk { position: absolute; top: 50%; width: 12px; height: 12px; border-radius: 50%; transform: translate(-50%,-50%); border: 2px solid var(--panel); }
-    .track .mk.say { background: var(--say); }
-    .track .mk.do  { background: var(--do); }
-    .scaleline { display: flex; justify-content: space-between; font: 400 9.5px 'Space Mono', monospace; color: var(--haze); margin-top: 5px; }
+    .row .top { display: flex; align-items: baseline; gap: 8px; margin-bottom: 10px; }
+    .row .name { font: 600 14px var(--body); letter-spacing: -0.01em; }
+    .qual { font: 500 11px var(--body); color: var(--muted); background: rgba(255,255,255,0.05); border: 1px solid var(--line-soft); padding: 2px 8px; border-radius: 999px; }
+    .row .gapval { margin-left: auto; font: 600 13px var(--body); color: var(--muted); white-space: nowrap; }
+    .row .gapval b { font-weight: 800; font-size: 15px; font-variant-numeric: tabular-nums; }
+    .track { position: relative; height: 10px; border-radius: 999px; background: var(--fill-track); box-shadow: inset 0 0 0 1px var(--line-soft); }
+    .track .span { position: absolute; height: 100%; border-radius: 999px; opacity: 0.6; }
+    .track .mk { position: absolute; top: 50%; width: 14px; height: 14px; border-radius: 50%; transform: translate(-50%,-50%); border: 2px solid rgba(22,15,30,0.9); }
+    .track .mk.say { background: var(--say); box-shadow: 0 0 10px rgba(167,139,250,0.85); }
+    .track .mk.do  { background: var(--do);  box-shadow: 0 0 10px rgba(255,122,89,0.85); }
+    .scaleline { display: flex; justify-content: space-between; font: 500 9.5px var(--body); color: var(--muted); margin-top: 6px; opacity: 0.65; }
 
     /* transcript */
-    .transcript { display: flex; flex-direction: column; gap: 12px; max-height: 560px; overflow: auto; padding-right: 4px; }
-    .msg { max-width: 82%; padding: 11px 14px; border-radius: 12px; font-size: 13.5px; line-height: 1.5; position: relative; }
-    .msg .who { font: 700 9.5px 'Space Mono', monospace; letter-spacing: 0.14em; text-transform: uppercase; opacity: 0.7; margin-bottom: 5px; }
-    .msg.user { align-self: flex-end; background: var(--panel-2); border: 1px solid var(--line-soft); }
-    .msg.assistant { align-self: flex-start; background: rgba(56,214,196,0.06); border: 1px solid rgba(56,214,196,0.18); }
+    .transcript { display: flex; flex-direction: column; gap: 13px; max-height: 560px; overflow: auto; padding-right: 6px; }
+    .msg { max-width: 82%; padding: 12px 15px; border-radius: 14px; font-size: 13.5px; line-height: 1.55; position: relative; }
+    .msg .who { font: 700 9.5px var(--body); letter-spacing: 0.12em; text-transform: uppercase; opacity: 0.75; margin-bottom: 6px; }
+    .msg.user { align-self: flex-end; background: rgba(255,255,255,0.05); border: 1px solid var(--line-soft); border-bottom-right-radius: 5px; }
+    .msg.assistant { align-self: flex-start; background: rgba(139,92,246,0.12); border: 1px solid rgba(167,139,250,0.24); border-bottom-left-radius: 5px; }
+    .msg.assistant .who { color: var(--accent-2); }
     .score-btn {
-      margin-top: 9px; font: 700 10px 'Space Mono', monospace; letter-spacing: 0.08em;
-      background: transparent; color: var(--brass); border: 1px solid var(--line); border-radius: 6px;
-      padding: 5px 9px; cursor: pointer;
+      margin-top: 11px; font: 600 11px var(--body); letter-spacing: 0.02em;
+      background: linear-gradient(90deg, var(--accent), var(--accent-2)); color: #fff; border: none; border-radius: 999px;
+      padding: 7px 14px; cursor: pointer; box-shadow: 0 8px 18px -6px rgba(139,92,246,0.7);
+      transition: filter 0.16s ease, transform 0.16s ease, box-shadow 0.16s ease;
     }
-    .score-btn:hover { background: rgba(201,162,75,0.12); }
-    .score-btn[disabled] { opacity: 0.35; cursor: default; }
-    .impacts { margin-top: 10px; display: none; flex-direction: column; gap: 6px; }
+    .score-btn:hover { filter: brightness(1.08); transform: translateY(-1px); box-shadow: 0 12px 22px -6px rgba(139,92,246,0.8); }
+    .score-btn[disabled] { opacity: 0.5; cursor: default; filter: none; transform: none; box-shadow: none; }
+    .impacts { margin-top: 12px; display: none; flex-direction: column; gap: 7px; }
     .impacts.show { display: flex; }
-    .impact { font: 400 12px Inter, sans-serif; display: flex; gap: 8px; align-items: baseline; opacity: 0; transform: translateY(4px); transition: all 0.35s ease; }
+    .impact { font: 400 12px var(--body); display: flex; gap: 8px; align-items: baseline; opacity: 0; transform: translateY(4px); transition: all 0.35s ease; }
     .impact.in { opacity: 1; transform: none; }
-    .impact .imp-v { font: 700 12px 'Space Mono', monospace; min-width: 46px; }
+    .impact .imp-v { font: 700 12px var(--body); font-variant-numeric: tabular-nums; min-width: 46px; }
     .impact .pos { color: var(--say); }
     .impact .neg { color: var(--flare); }
-    .impact .rat { color: var(--haze); font-style: italic; }
+    .impact .rat { color: var(--muted); font-style: italic; }
 
-    .state { text-align: center; color: var(--haze); padding: 60px 20px; font-size: 14px; }
+    .state { text-align: center; color: var(--muted); padding: 64px 20px; font-size: 14px; }
     .state.err { color: var(--flare); }
 
-    ::-webkit-scrollbar { width: 8px; } ::-webkit-scrollbar-thumb { background: var(--line); border-radius: 8px; }
-    @media (prefers-reduced-motion: reduce) { .impact { transition: none; } }
+    ::-webkit-scrollbar { width: 9px; height: 9px; }
+    ::-webkit-scrollbar-thumb { background: rgba(167,139,250,0.32); border-radius: 999px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(167,139,250,0.5); }
+
+    @media (prefers-reduced-motion: reduce) {
+      .aurora::before, .aurora::after, .aurora span { animation: none !important; }
+      .reveal, .bar-fill, .row, .impact { animation: none !important; transition: none !important; opacity: 1 !important; transform: none !important; }
+    }
   </style>
 </head>
 <body>
+  <div class="aurora" aria-hidden="true"><span class="b1"></span><span class="b2"></span></div>
+
   <header class="bar">
+    <a class="backlink" href="/" title="Return to the admin dashboard">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
+      Admin dashboard
+    </a>
+    <div class="header-divider"></div>
     <div class="brand">
-      <span class="eyebrow">Purple Spark · Leadership Signal</span>
-      <h1>The Say–Do Gap</h1>
+      <span class="eyebrow">Purple Spark Leadership Analytics</span>
+      <h1>The Say&#8211;Do Gap</h1>
     </div>
     <div class="spacer"></div>
     <div class="picker">
       <label for="user">Leader</label>
-      <select id="user"><option value="">Loading…</option></select>
+      <select id="user"><option value="">Loading</option></select>
     </div>
   </header>
 
   <main>
-    <section class="explainer">
+    <section class="explainer glass reveal">
       <p><strong>What you're looking at.</strong> Every leader is measured on the same set of leadership
-      traits, two ways: what they <span class="hl-say">say</span> they value — drawn from their own written
-      reflections — and what they <span class="hl-do">do</span> when they make decisions under pressure in
-      timed simulations. Both are scored on the same 0–10 scale. Where the two pull apart is the leader's
-      <span class="term">say–do gap</span>: the traits they talk about but don't act on, or act on without
-      naming. Pick a leader to see their gap trait by trait.</p>
+      traits, two ways: what they <span class="hl-say"><svg class="ic ic-say" viewBox="0 0 24 24" role="img" aria-label="Say"><title>Say</title><path d="M4 4h16a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1H9l-4.6 3.7A.6.6 0 0 1 3.4 20V5a1 1 0 0 1 1-1Z"/></svg> say</span>
+      they value, drawn from their own written reflections, and what they
+      <span class="hl-do"><svg class="ic ic-do" viewBox="0 0 24 24" role="img" aria-label="Do"><title>Do</title><path d="M13 2 4 13.5h6L9.5 22 20 9.5h-6L13 2Z"/></svg> do</span>
+      when they make decisions under pressure in timed simulations. Both are scored on the same 0 to 10
+      scale. Where the two pull apart is the leader's <span class="term">say-do gap</span>: the traits they
+      talk about but don't act on, or act on without naming. Pick a leader to see their gap trait by trait.</p>
     </section>
 
     <div id="readouts" class="readouts" hidden>
-      <div class="readout" title="Traits with a stated (Say) score, from the leader's reflections"><div class="k">Traits they name</div><div class="v" id="r-say">–</div></div>
-      <div class="readout" title="Traits with a revealed (Do) score, from their decisions under pressure"><div class="k">Traits they show</div><div class="v" id="r-do">–</div></div>
-      <div class="readout" title="Traits measured on both sides — the ones with a real, comparable gap"><div class="k">Measured on both</div><div class="v" id="r-both">–</div></div>
-      <div class="readout flare" title="Average gap across comparable traits, on the 0–10 scale"><div class="k">Average gap</div><div class="v" id="r-gap">–<small>/10</small></div></div>
+      <div class="readout glass reveal" title="Traits with a stated (Say) score, from the leader's reflections"><div class="k">Traits they name</div><div class="v" id="r-say">-</div></div>
+      <div class="readout glass reveal" title="Traits with a revealed (Do) score, from their decisions under pressure"><div class="k">Traits they show</div><div class="v" id="r-do">-</div></div>
+      <div class="readout glass reveal" title="Traits measured on both sides, the ones with a real, comparable gap"><div class="k">Measured on both</div><div class="v" id="r-both">-</div></div>
+      <div class="readout glass reveal flare" title="Average gap across comparable traits, on the 0 to 10 scale"><div class="k">Average gap</div><div class="v" id="r-gap">-<small>/10</small></div></div>
     </div>
 
     <div id="state" class="state">Choose a leader above to see how their stated values line up with their decisions under pressure.</div>
 
     <div id="content" class="grid" hidden>
-      <section class="card">
-        <h2>Say vs Do · by trait</h2>
-        <p class="sub">Two bars per trait — teal is what they <strong>say</strong> they value, amber is what they <strong>do</strong> under pressure. The bigger the difference between the two bars, the bigger the gap. Top traits by divergence.</p>
+      <section class="card glass reveal">
+        <h2>Say vs Do, by trait</h2>
+        <p class="sub">Two bars per trait: the violet bar is what they <strong>say</strong> they value, the coral bar is what they <strong>do</strong> under pressure. The bigger the difference between the two bars, the bigger the gap. Showing the top traits by divergence.</p>
         <div class="legend">
-          <span><i class="dot say"></i> Say — what they state</span>
-          <span><i class="dot do"></i> Do — what they did</span>
+          <span><svg class="ic ic-say" viewBox="0 0 24 24" role="img" aria-label="Say"><title>Say</title><path d="M4 4h16a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1H9l-4.6 3.7A.6.6 0 0 1 3.4 20V5a1 1 0 0 1 1-1Z"/></svg> <b>Say</b> &nbsp;what they state</span>
+          <span><svg class="ic ic-do" viewBox="0 0 24 24" role="img" aria-label="Do"><title>Do</title><path d="M13 2 4 13.5h6L9.5 22 20 9.5h-6L13 2Z"/></svg> <b>Do</b> &nbsp;what they did</span>
         </div>
         <div id="chart" class="barchart"></div>
       </section>
 
-      <section class="card">
+      <section class="card glass reveal">
         <h2>Divergence leaderboard</h2>
-        <p class="sub">Per trait: teal marks the stated score, amber marks the revealed score, the shaded span is the gap.</p>
+        <p class="sub">Per trait: the violet marker is the stated score, the coral marker is the revealed score, and the glowing span between them is the gap.</p>
         <div id="lead" class="lead"></div>
       </section>
 
-      <section class="card" style="grid-column: 1 / -1;">
+      <section class="card glass reveal" style="grid-column: 1 / -1;">
         <h2>Navigator conversation</h2>
         <p class="sub" id="tsub">The leader's own written reflection. Their stated values are drawn from the turns they wrote.</p>
         <div id="transcript" class="transcript"></div>
